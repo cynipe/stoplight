@@ -18,7 +18,7 @@ require 'cgi'
 module Stoplight::Providers
   class Icinga < Provider
 
-    INFO_KEYS = %w(name status_all current_state last_check notifications_enabled problem_has_been_acknowledged scheduled_downtime_depth).freeze
+    INFO_KEYS = %w(name status_all current_state state_type last_check notifications_enabled problem_has_been_acknowledged scheduled_downtime_depth).freeze
 
     def initialize(options ={})
       raise ArgumentError, "'kind' must be supplied to the Provider. Please add 'kind' => '...' to your hash." unless options['kind']
@@ -64,7 +64,11 @@ module Stoplight::Providers
 
     # Returns whether the host or the service disabled
     def disabled?(project)
-      project["#{attr_prefix}_NOTIFICATIONS_ENABLED"] == '0' or project["#{attr_prefix}_PROBLEM_HAS_BEEN_ACKNOWLEDGED"] == '1' or project["#{attr_prefix}_SCHEDULED_DOWNTIME_DEPTH"] == '1'
+      return true if project["#{attr_prefix}_NOTIFICATIONS_ENABLED"] == '0'
+      return true if project["#{attr_prefix}_PROBLEM_HAS_BEEN_ACKNOWLEDGED"] == '1'
+      return true if project["#{attr_prefix}_SCHEDULED_DOWNTIME_DEPTH"] == '1'
+      return true if project["#{attr_prefix}_STATE_TYPE"] == '0' # "0" means SOFT state
+      return false
     end
 
     def kind
